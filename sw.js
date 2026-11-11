@@ -1,4 +1,4 @@
-/* Service Worker — Supérette (cache hors ligne) */
+const CACHE = 'superette-v2';
 const CACHE = 'superette-v1';
 const ASSETS = ['./', './index.html'];
 
