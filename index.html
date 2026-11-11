@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Supérette">
 <meta name="description" content="Gestion des achats, recettes, dépenses et bilan financier d'une supérette. Fonctionne hors ligne.">
 <title>Supérette — Gestion</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
@@ -48,7 +50,7 @@ header{background:linear-gradient(150deg,#0f766e,#134e4a);color:#fff;padding:14p
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:1 0 auto;min-width:78px;padding:11px 12px;border:0;border-radius:11px;
              background:#fff;color:#475569;font-weight:700;font-size:13.5px;
-             box-shadow:0 1px 2px rgba(15,23,42,.07);font-family:inherit}
+             box-shadow:0 1px 2px rgba(15,23,42,.07);font-family:inherit; cursor:pointer;}
 .tabs button.active{background:#0f766e;color:#fff;box-shadow:0 3px 10px rgba(15,118,110,.35)}
 
 /* ---------- CARTES ---------- */
@@ -61,7 +63,7 @@ input,select{width:100%;padding:13px 12px;border:1.5px solid #cbd5e1;border-radi
              font-size:16px;background:#fff;color:#0f172a;font-family:inherit}
 input:focus,select:focus{outline:0;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.15)}
 .btn{display:block;width:100%;padding:15px;border:0;border-radius:13px;font-size:16px;
-     font-weight:800;color:#fff;background:#0f766e;margin-top:16px;font-family:inherit}
+     font-weight:800;color:#fff;background:#0f766e;margin-top:16px;font-family:inherit; cursor:pointer;}
 .btn:active{transform:scale(.99)}
 .btn.sec{background:#e2e8f0;color:#0f172a}
 .btn.danger{background:#dc2626}
@@ -79,7 +81,7 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
 .op-amt.recette{color:#16a34a}
 .op-amt.achat,.op-amt.depense{color:#dc2626}
 .del{background:#f1f5f9;border:0;color:#64748b;width:36px;height:36px;border-radius:10px;
-     font-size:14px;flex:0 0 auto;font-family:inherit}
+     font-size:14px;flex:0 0 auto;font-family:inherit; cursor:pointer;}
 .del:active{background:#e2e8f0}
 .empty{text-align:center;color:#94a3b8;font-size:13.5px;padding:20px 0}
 
@@ -125,14 +127,12 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
 </head>
 <body>
 
-<!-- Bandeau installation PWA -->
 <div class="pwa-banner" id="installBanner" hidden>
   <span>📲 Installer l'application sur votre écran d'accueil</span>
   <button id="btnInstall">Installer</button>
   <button class="close" id="btnDismissInstall" aria-label="Fermer">✕</button>
 </div>
 
-<!-- Bandeau mise à jour -->
 <div class="pwa-banner update" id="updateBanner" hidden>
   <span>🔄 Une nouvelle version est disponible</span>
   <button id="btnReload">Recharger</button>
@@ -145,7 +145,7 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
     <div class="brand" id="shopName">Ma Supérette</div>
     <div class="topbtns">
       <button class="icon-btn" id="btnInstallHeader" title="Installer" hidden>⤓</button>
-      <button class="icon-btn" id="btnSettings" title="Paramètres">⚙</button>
+      <button class="icon-btn" onclick="SUP.openSettings()" title="Paramètres">⚙</button>
     </div>
   </div>
   <div class="hero">
@@ -160,17 +160,16 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
 </header>
 
 <nav class="tabs">
-  <button data-tab="recette" class="active">Recettes</button>
-  <button data-tab="achat">Achats</button>
-  <button data-tab="depense">Dépenses</button>
-  <button data-tab="bilan">Bilan</button>
+  <button data-tab="recette" class="active" onclick="showTab('recette', this)">Recettes</button>
+  <button data-tab="achat" onclick="showTab('achat', this)">Achats</button>
+  <button data-tab="depense" onclick="showTab('depense', this)">Dépenses</button>
+  <button data-tab="bilan" onclick="showTab('bilan', this)">Bilan</button>
 </nav>
 
 <div class="warn" id="storageWarn" hidden>
   ⚠️ Stockage local indisponible. Exportez vos données régulièrement (⚙ → Exporter).
 </div>
 
-<!-- ============ RECETTES ============ -->
 <section class="tab-panel" id="tab-recette">
   <div class="card">
     <h2>Enregistrer une recette</h2>
@@ -189,7 +188,6 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
   </div>
 </section>
 
-<!-- ============ ACHATS ============ -->
 <section class="tab-panel" id="tab-achat" hidden>
   <div class="card">
     <h2>Enregistrer un achat</h2>
@@ -208,7 +206,6 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
   </div>
 </section>
 
-<!-- ============ DÉPENSES ============ -->
 <section class="tab-panel" id="tab-depense" hidden>
   <div class="card">
     <h2>Enregistrer une dépense</h2>
@@ -227,7 +224,6 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
   </div>
 </section>
 
-<!-- ============ BILAN ============ -->
 <section class="tab-panel" id="tab-bilan" hidden>
   <div class="card">
     <h2>Bilan financier</h2>
@@ -248,104 +244,43 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
   </div>
 </section>
 
-<!-- ============ MODALE PARAMÈTRES ============ -->
 <div class="modal" id="settingsModal">
   <div class="modal-card">
     <h2>Paramètres</h2>
-
     <label for="s-name">Nom de la supérette</label>
     <input type="text" id="s-name" placeholder="Ma Supérette">
-
     <label for="s-capital">Capital initial (fonds de caisse de départ)</label>
     <input type="number" id="s-capital" inputmode="decimal" step="any" placeholder="0">
-
     <label for="s-devise">Devise</label>
     <input type="text" id="s-devise" placeholder="FCFA, €, $…">
-
     <button class="btn" id="btnSaveSettings">Enregistrer les paramètres</button>
-
     <hr class="sep">
-
     <button class="btn sec" id="btnExport">⬇ Exporter les données (JSON)</button>
     <button class="btn sec" id="btnImport">⬆ Importer une sauvegarde</button>
     <input type="file" id="fileImport" accept="application/json,.json" hidden>
     <button class="btn danger" id="btnReset">Réinitialiser toutes les données</button>
     <button class="btn sec" id="btnCloseSettings">Fermer</button>
-
-    <p class="hint" style="margin-top:14px">
-      L'application fonctionne hors ligne. Les données restent dans la mémoire de l'appareil :
-      pensez à exporter une sauvegarde de temps en temps.
-    </p>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- ==================== 1) SETUP PWA ==================== -->
 <script>
+// ---- GESTION DES ONGLETS (Corrigé) ----
+function showTab(tabName, btn) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    if (p.id === 'tab-' + tabName) { p.removeAttribute('hidden'); } 
+    else { p.setAttribute('hidden', ''); }
+  });
+  window.scrollTo(0, 0);
+}
+
+// ---- SETUP PWA ----
 (function setupPWA(){
   'use strict';
   const $ = id => document.getElementById(id);
-
-  function makeIcon(size){
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const x = c.getContext('2d');
-    const r = size * 0.18;
-    const g = x.createLinearGradient(0, 0, size, size);
-    g.addColorStop(0, '#14b8a6');
-    g.addColorStop(1, '#0f766e');
-    x.fillStyle = g;
-    x.beginPath();
-    x.moveTo(r, 0);
-    x.lineTo(size - r, 0); x.quadraticCurveTo(size, 0, size, r);
-    x.lineTo(size, size - r); x.quadraticCurveTo(size, size, size - r, size);
-    x.lineTo(r, size); x.quadraticCurveTo(0, size, 0, size - r);
-    x.lineTo(0, r); x.quadraticCurveTo(0, 0, r, 0);
-    x.closePath(); x.fill();
-    x.fillStyle = '#ffffff';
-    x.font = 'bold ' + Math.round(size * 0.58) + 'px system-ui, -apple-system, sans-serif';
-    x.textAlign = 'center';
-    x.textBaseline = 'middle';
-    x.fillText('S', size / 2, size / 2 + size * 0.03);
-    x.fillStyle = '#fde68a';
-    x.beginPath();
-    x.arc(size * 0.78, size * 0.22, size * 0.05, 0, Math.PI * 2);
-    x.fill();
-    return c.toDataURL('image/png');
-  }
-
-  const icon192 = makeIcon(192);
-  const icon512 = makeIcon(512);
-  const manifest = {
-    name: 'Supérette — Gestion',
-    short_name: 'Supérette',
-    description: "Gestion des achats, recettes, dépenses et bilan financier d'une supérette.",
-    start_url: './',
-    scope: './',
-    display: 'standalone',
-    orientation: 'portrait',
-    background_color: '#eef2f5',
-    theme_color: '#0f766e',
-    lang: 'fr',
-    icons: [
-      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-    ]
-  };
-  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  const manifestURL = URL.createObjectURL(manifestBlob);
-  const link = document.createElement('link');
-  link.rel = 'manifest';
-  link.href = manifestURL;
-  document.head.appendChild(link);
-
-  const appleIcon = document.createElement('link');
-  appleIcon.rel = 'apple-touch-icon';
-  appleIcon.href = makeIcon(180);
-  document.head.appendChild(appleIcon);
-
   let swReg = null;
   let hadController = !!navigator.serviceWorker.controller;
 
@@ -372,7 +307,6 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
   }
 
   $('btnReload').addEventListener('click', () => location.reload());
-
   let deferredPrompt = null;
 
   function showInstallUI(show){
@@ -384,9 +318,7 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    try {
-      if (localStorage.getItem('pwa.install.dismissed') === '1') return;
-    } catch(_) {}
+    try { if (localStorage.getItem('pwa.install.dismissed') === '1') return; } catch(_) {}
     showInstallUI(true);
   });
 
@@ -399,9 +331,7 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
     const res = await deferredPrompt.userChoice;
     deferredPrompt = null;
     showInstallUI(false);
-    if (res.outcome === 'accepted') {
-      try { localStorage.removeItem('pwa.install.dismissed'); } catch(_){}
-    }
+    if (res.outcome === 'accepted') { try { localStorage.removeItem('pwa.install.dismissed'); } catch(_){} }
   }
 
   $('btnInstall').addEventListener('click', triggerInstall);
@@ -418,26 +348,17 @@ hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
     try { localStorage.removeItem('pwa.install.dismissed'); } catch(_){}
   });
 
-  function updateOnline(){
-    $('offlineBadge').hidden = navigator.onLine;
-  }
+  function updateOnline(){ $('offlineBadge').hidden = navigator.onLine; }
   window.addEventListener('online', updateOnline);
   window.addEventListener('offline', updateOnline);
   updateOnline();
-
-  window.SUP = window.SUP || {};
-  window.SUP.install = triggerInstall;
 })();
-</script>
 
-<!-- ==================== 2) LOGIQUE MÉTIER ==================== -->
-<script>
+// ---- LOGIQUE MÉTIER ----
 (function(){
 'use strict';
-
 const KEY = 'superette.v1';
 const DEFAULTS = { shopName:'Ma Supérette', capital:0, devise:'FCFA', ops:[] };
-
 let S = loadState();
 let storageOK = true;
 
@@ -462,19 +383,15 @@ function normalizeOp(x){
   const t = ['recette','achat','depense'].indexOf(x.type) >= 0 ? x.type : 'depense';
   return {
     id: String(x.id || (Date.now() + Math.random().toString(36).slice(2,7))),
-    type: t,
-    montant: Math.abs(Number(x.montant) || 0),
-    libelle: String(x.libelle || ''),
-    date: String(x.date || todayStr()),
+    type: t, montant: Math.abs(Number(x.montant) || 0),
+    libelle: String(x.libelle || ''), date: String(x.date || todayStr()),
     ts: Number(x.ts) || Date.now()
   };
 }
 
 function save(){
-  try{
-    localStorage.setItem(KEY, JSON.stringify(S));
-    storageOK = true;
-  }catch(e){ storageOK = false; }
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); storageOK = true; }
+  catch(e){ storageOK = false; }
   render();
 }
 
@@ -486,6 +403,58 @@ function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&l
 function round2(n){ return Math.round((Number(n)||0)*100)/100; }
 function fmt(n){ return round2(n).toLocaleString('fr-FR',{maximumFractionDigits:2}) + ' ' + S.devise; }
 function fmtSigned(n){
+  const v = round2(n); const sign = v > 0 ? '+' : (v < 0 ? '−' : '');
+  return sign + Math.abs(v).toLocaleString('fr-FR',{maximumFractionDigits:2}) + ' ' + S.devise;
+}
+function fmtShort(n){
   const v = round2(n);
-  const sign = v > 0 ? '+' : (v < 0 ? '−' : '');
-  return
+  if(v >= 1000000) return (v/1000000).toFixed(1).replace('.',',') + 'M';
+  if(v >= 1000) return (v/1000).toFixed(v>=10000?0:1).replace('.',',') + 'k';
+  return String(v);
+}
+function dateLabel(ds){
+  if(!ds) return '—';
+  if(ds === todayStr()) return "Aujourd'hui";
+  const y = new Date(); y.setDate(y.getDate()-1);
+  if(ds === ymd(y)) return 'Hier';
+  const p = ds.split('-');
+  if(p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+  return ds;
+}
+function defaultLabel(type){ return type === 'recette' ? 'Recette' : (type === 'achat' ? 'Achat' : 'Dépense'); }
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(()=> t.classList.remove('show'), 1900);
+}
+
+function totals(){
+  let r = 0, a = 0, d = 0;
+  for(const o of S.ops){
+    const m = Number(o.montant) || 0;
+    if(o.type === 'recette') r += m; else if(o.type === 'achat') a += m; else if(o.type === 'depense') d += m;
+  }
+  return { r, a, d, reste: S.capital + r - a - d, benefice: r - a - d };
+}
+function sumFor(type, ds){
+  return S.ops.reduce((s,o)=> (o.type === type && o.date === ds) ? s + (Number(o.montant)||0) : s, 0);
+}
+
+function addOp(type){
+  const mEl = $('m-'+type), lEl = $('l-'+type), dEl = $('d-'+type);
+  const montant = parseFloat(String(mEl.value).replace(',','.'));
+  if(!isFinite(montant) || montant <= 0){ alert('Veuillez saisir un montant valide (supérieur à 0).'); mEl.focus(); return; }
+  S.ops.push({
+    id: Date.now() + Math.random().toString(36).slice(2,7), type: type,
+    montant: round2(montant), libelle: (lEl.value || '').trim().slice(0,80) || defaultLabel(type),
+    date: dEl.value || todayStr(), ts: Date.now()
+  });
+  mEl.value = ''; lEl.value = '';
+  save(); toast('Enregistré ✓');
+}
+
+function deleteOp(id){
+  const op = S.ops.find(o => String(o.id) === String(id));
+  if(!op) return;
+  if(!confirm('Supprimer cette opération ?\n\n' + op.libelle + ' — ' + fmt(op.montant) + '\n' + dateLabel(op.date))) return;
+  S.ops = S.ops.filter(o => String(o.id) !== String(id));
+  s
