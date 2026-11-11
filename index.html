@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Supérette">
+<meta name="description" content="Gestion des achats, recettes, dépenses et bilan financier d'une supérette. Fonctionne hors ligne.">
+<title>Supérette — Gestion</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+     background:#eef2f5;color:#0f172a;font-size:16px;line-height:1.4;padding-bottom:30px}
+
+/* ---------- BANDEAUX PWA ---------- */
+.pwa-banner{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px;
+  padding:10px 12px;background:#0f766e;color:#fff;font-size:13.5px;font-weight:600;
+  box-shadow:0 2px 8px rgba(15,23,42,.15)}
+.pwa-banner.update{background:#b45309}
+.pwa-banner span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pwa-banner button{padding:7px 12px;border:0;border-radius:8px;font-weight:700;font-size:12.5px;
+  background:#fff;color:#0f766e;font-family:inherit}
+.pwa-banner.update button{color:#b45309}
+.pwa-banner button.close{background:transparent;color:#fff;font-size:16px;padding:4px 8px}
+
+/* ---------- EN-TÊTE ---------- */
+header{background:linear-gradient(150deg,#0f766e,#134e4a);color:#fff;padding:14px 14px 18px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-weight:700;font-size:15px;opacity:.95;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbtns{display:flex;gap:6px;flex:0 0 auto}
+.icon-btn{background:rgba(255,255,255,.16);border:0;color:#fff;width:42px;height:42px;
+          border-radius:13px;font-size:19px;display:grid;place-items:center;flex:0 0 auto}
+.icon-btn[hidden]{display:none}
+.hero{background:rgba(255,255,255,.13);border-radius:16px;padding:14px;margin-top:12px}
+.hero-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.85;font-weight:700}
+.hero-value{font-size:clamp(24px,8.5vw,34px);font-weight:800;margin:5px 0 10px;line-height:1.05;word-break:break-word}
+.hero-value.neg{color:#fecaca}
+.hero-sub{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;opacity:.93}
+.hero-sub b{font-weight:700}
+
+/* ---------- ONGLETS ---------- */
+.tabs{display:flex;gap:6px;padding:10px;background:#eef2f5;position:sticky;top:0;z-index:20;
+      overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;min-width:78px;padding:11px 12px;border:0;border-radius:11px;
+             background:#fff;color:#475569;font-weight:700;font-size:13.5px;
+             box-shadow:0 1px 2px rgba(15,23,42,.07);font-family:inherit}
+.tabs button.active{background:#0f766e;color:#fff;box-shadow:0 3px 10px rgba(15,118,110,.35)}
+
+/* ---------- CARTES ---------- */
+.card{background:#fff;border-radius:16px;padding:14px;margin:0 10px 12px;
+      box-shadow:0 1px 3px rgba(15,23,42,.08)}
+.card h2{margin:0 0 4px;font-size:15px;font-weight:800}
+.hint{font-size:12px;color:#64748b;margin:4px 0 0;line-height:1.35}
+label{display:block;font-size:12.5px;font-weight:700;color:#475569;margin:12px 0 5px}
+input,select{width:100%;padding:13px 12px;border:1.5px solid #cbd5e1;border-radius:11px;
+             font-size:16px;background:#fff;color:#0f172a;font-family:inherit}
+input:focus,select:focus{outline:0;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.15)}
+.btn{display:block;width:100%;padding:15px;border:0;border-radius:13px;font-size:16px;
+     font-weight:800;color:#fff;background:#0f766e;margin-top:16px;font-family:inherit}
+.btn:active{transform:scale(.99)}
+.btn.sec{background:#e2e8f0;color:#0f172a}
+.btn.danger{background:#dc2626}
+.btn.small{padding:12px;font-size:14px;margin-top:10px}
+hr.sep{margin:18px 0;border:0;border-top:1px solid #e2e8f0}
+
+/* ---------- LISTES ---------- */
+.dayhead{display:flex;justify-content:space-between;font-size:11.5px;font-weight:800;color:#64748b;
+         text-transform:uppercase;letter-spacing:.05em;padding:14px 0 6px;border-bottom:1px solid #e2e8f0}
+.op{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid #f1f5f9}
+.op:last-child{border-bottom:0}
+.op-main{flex:1;min-width:0}
+.op-lib{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.op-amt{font-weight:800;font-size:14.5px;white-space:nowrap}
+.op-amt.recette{color:#16a34a}
+.op-amt.achat,.op-amt.depense{color:#dc2626}
+.del{background:#f1f5f9;border:0;color:#64748b;width:36px;height:36px;border-radius:10px;
+     font-size:14px;flex:0 0 auto;font-family:inherit}
+.del:active{background:#e2e8f0}
+.empty{text-align:center;color:#94a3b8;font-size:13.5px;padding:20px 0}
+
+/* ---------- BILAN ---------- */
+.brow{display:flex;justify-content:space-between;gap:10px;padding:11px 0;
+      border-bottom:1px dashed #e2e8f0;font-size:15px}
+.brow:last-child{border-bottom:0}
+.brow b{font-weight:800;white-space:nowrap}
+.brow b.pos{color:#16a34a}
+.brow b.neg{color:#dc2626}
+.brow.total{border-top:2px solid #0f766e;border-bottom:0;margin-top:8px;padding-top:13px;
+            font-size:17px;font-weight:800;color:#0f766e}
+.brow.total b{font-size:19px}
+.brow.total b.neg{color:#dc2626}
+.brow.sub{font-size:13px;color:#64748b;border-bottom:0;padding-top:6px}
+
+/* ---------- GRAPHIQUE ---------- */
+.bar-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px}
+.bar-day{width:34px;color:#64748b;font-weight:700;text-transform:capitalize}
+.bar-track{flex:1;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0f766e,#14b8a6);border-radius:7px;min-width:2px}
+.bar-val{width:78px;text-align:right;font-weight:700;color:#334155;font-size:11.5px}
+
+/* ---------- MODALE ---------- */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;z-index:50;
+       padding:16px;overflow-y:auto}
+.modal.open{display:block}
+.modal-card{background:#fff;border-radius:18px;padding:18px;max-width:480px;
+            margin:20px auto;max-height:calc(100vh - 40px);overflow-y:auto}
+.modal-card h2{margin:0 0 6px;font-size:18px}
+
+/* ---------- TOAST ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#0f172a;
+       color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600;
+       opacity:0;transition:.25s;pointer-events:none;z-index:60;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.tab-panel[hidden]{display:none}
+.warn{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;
+      padding:11px;font-size:12.5px;margin:0 10px 12px;line-height:1.4}
+.offline-badge{position:fixed;top:8px;right:8px;background:#f59e0b;color:#fff;padding:5px 10px;
+  border-radius:999px;font-size:11px;font-weight:800;z-index:45;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+</style>
+</head>
+<body>
+
+<!-- Bandeau installation PWA -->
+<div class="pwa-banner" id="installBanner" hidden>
+  <span>📲 Installer l'application sur votre écran d'accueil</span>
+  <button id="btnInstall">Installer</button>
+  <button class="close" id="btnDismissInstall" aria-label="Fermer">✕</button>
+</div>
+
+<!-- Bandeau mise à jour -->
+<div class="pwa-banner update" id="updateBanner" hidden>
+  <span>🔄 Une nouvelle version est disponible</span>
+  <button id="btnReload">Recharger</button>
+</div>
+
+<div class="offline-badge" id="offlineBadge" hidden>Hors ligne</div>
+
+<header>
+  <div class="topbar">
+    <div class="brand" id="shopName">Ma Supérette</div>
+    <div class="topbtns">
+      <button class="icon-btn" id="btnInstallHeader" title="Installer" hidden>⤓</button>
+      <button class="icon-btn" id="btnSettings" title="Paramètres">⚙</button>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="hero-label">Valeur financière restante</div>
+    <div class="hero-value" id="heroValue">0</div>
+    <div class="hero-sub">
+      <span>Recettes <b id="hRec">0</b></span>
+      <span>Achats <b id="hAch">0</b></span>
+      <span>Dépenses <b id="hDep">0</b></span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="recette" class="active">Recettes</button>
+  <button data-tab="achat">Achats</button>
+  <button data-tab="depense">Dépenses</button>
+  <button data-tab="bilan">Bilan</button>
+</nav>
+
+<div class="warn" id="storageWarn" hidden>
+  ⚠️ Stockage local indisponible. Exportez vos données régulièrement (⚙ → Exporter).
+</div>
+
+<!-- ============ RECETTES ============ -->
+<section class="tab-panel" id="tab-recette">
+  <div class="card">
+    <h2>Enregistrer une recette</h2>
+    <p class="hint" id="recetteJour">Recette du jour : —</p>
+    <label for="d-recette">Date</label>
+    <input type="date" id="d-recette">
+    <label for="m-recette">Montant encaissé</label>
+    <input type="number" id="m-recette" inputmode="decimal" step="any" min="0" placeholder="0">
+    <label for="l-recette">Libellé (facultatif)</label>
+    <input type="text" id="l-recette" placeholder="Recette du jour">
+    <button class="btn" onclick="SUP.addOp('recette')">＋ Ajouter la recette</button>
+  </div>
+  <div class="card">
+    <h2>Historique des recettes</h2>
+    <div id="list-recette"></div>
+  </div>
+</section>
+
+<!-- ============ ACHATS ============ -->
+<section class="tab-panel" id="tab-achat" hidden>
+  <div class="card">
+    <h2>Enregistrer un achat</h2>
+    <p class="hint">Marchandises, réapprovisionnement, stock…</p>
+    <label for="d-achat">Date</label>
+    <input type="date" id="d-achat">
+    <label for="m-achat">Montant de l'achat</label>
+    <input type="number" id="m-achat" inputmode="decimal" step="any" min="0" placeholder="0">
+    <label for="l-achat">Libellé</label>
+    <input type="text" id="l-achat" placeholder="Ex : cartons de boissons">
+    <button class="btn" onclick="SUP.addOp('achat')">＋ Ajouter l'achat</button>
+  </div>
+  <div class="card">
+    <h2>Historique des achats</h2>
+    <div id="list-achat"></div>
+  </div>
+</section>
+
+<!-- ============ DÉPENSES ============ -->
+<section class="tab-panel" id="tab-depense" hidden>
+  <div class="card">
+    <h2>Enregistrer une dépense</h2>
+    <p class="hint">Loyer, électricité, salaires, transport, divers…</p>
+    <label for="d-depense">Date</label>
+    <input type="date" id="d-depense">
+    <label for="m-depense">Montant de la dépense</label>
+    <input type="number" id="m-depense" inputmode="decimal" step="any" min="0" placeholder="0">
+    <label for="l-depense">Libellé</label>
+    <input type="text" id="l-depense" placeholder="Ex : facture d'électricité">
+    <button class="btn" onclick="SUP.addOp('depense')">＋ Ajouter la dépense</button>
+  </div>
+  <div class="card">
+    <h2>Historique des dépenses</h2>
+    <div id="list-depense"></div>
+  </div>
+</section>
+
+<!-- ============ BILAN ============ -->
+<section class="tab-panel" id="tab-bilan" hidden>
+  <div class="card">
+    <h2>Bilan financier</h2>
+    <div id="bilanRows"></div>
+    <p class="hint" style="margin-top:12px">
+      Valeur restante = Capital initial + Recettes − Achats − Dépenses
+    </p>
+  </div>
+  <div class="card">
+    <h2>Recettes des 7 derniers jours</h2>
+    <div id="chart7"></div>
+  </div>
+  <div class="card">
+    <h2>Sauvegarde & installation</h2>
+    <p class="hint">Exportez régulièrement vos données : elles sont stockées uniquement sur cet appareil.</p>
+    <button class="btn sec small" onclick="SUP.openSettings()">⚙ Ouvrir les paramètres</button>
+    <button class="btn small" id="btnInstallBilan" hidden>📲 Installer sur l'écran d'accueil</button>
+  </div>
+</section>
+
+<!-- ============ MODALE PARAMÈTRES ============ -->
+<div class="modal" id="settingsModal">
+  <div class="modal-card">
+    <h2>Paramètres</h2>
+
+    <label for="s-name">Nom de la supérette</label>
+    <input type="text" id="s-name" placeholder="Ma Supérette">
+
+    <label for="s-capital">Capital initial (fonds de caisse de départ)</label>
+    <input type="number" id="s-capital" inputmode="decimal" step="any" placeholder="0">
+
+    <label for="s-devise">Devise</label>
+    <input type="text" id="s-devise" placeholder="FCFA, €, $…">
+
+    <button class="btn" id="btnSaveSettings">Enregistrer les paramètres</button>
+
+    <hr class="sep">
+
+    <button class="btn sec" id="btnExport">⬇ Exporter les données (JSON)</button>
+    <button class="btn sec" id="btnImport">⬆ Importer une sauvegarde</button>
+    <input type="file" id="fileImport" accept="application/json,.json" hidden>
+    <button class="btn danger" id="btnReset">Réinitialiser toutes les données</button>
+    <button class="btn sec" id="btnCloseSettings">Fermer</button>
+
+    <p class="hint" style="margin-top:14px">
+      L'application fonctionne hors ligne. Les données restent dans la mémoire de l'appareil :
+      pensez à exporter une sauvegarde de temps en temps.
+    </p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ==================== 1) SETUP PWA ==================== -->
+<script>
+(function setupPWA(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  function makeIcon(size){
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const x = c.getContext('2d');
+    const r = size * 0.18;
+    const g = x.createLinearGradient(0, 0, size, size);
+    g.addColorStop(0, '#14b8a6');
+    g.addColorStop(1, '#0f766e');
+    x.fillStyle = g;
+    x.beginPath();
+    x.moveTo(r, 0);
+    x.lineTo(size - r, 0); x.quadraticCurveTo(size, 0, size, r);
+    x.lineTo(size, size - r); x.quadraticCurveTo(size, size, size - r, size);
+    x.lineTo(r, size); x.quadraticCurveTo(0, size, 0, size - r);
+    x.lineTo(0, r); x.quadraticCurveTo(0, 0, r, 0);
+    x.closePath(); x.fill();
+    x.fillStyle = '#ffffff';
+    x.font = 'bold ' + Math.round(size * 0.58) + 'px system-ui, -apple-system, sans-serif';
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.fillText('S', size / 2, size / 2 + size * 0.03);
+    x.fillStyle = '#fde68a';
+    x.beginPath();
+    x.arc(size * 0.78, size * 0.22, size * 0.05, 0, Math.PI * 2);
+    x.fill();
+    return c.toDataURL('image/png');
+  }
+
+  const icon192 = makeIcon(192);
+  const icon512 = makeIcon(512);
+  const manifest = {
+    name: 'Supérette — Gestion',
+    short_name: 'Supérette',
+    description: "Gestion des achats, recettes, dépenses et bilan financier d'une supérette.",
+    start_url: './',
+    scope: './',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#eef2f5',
+    theme_color: '#0f766e',
+    lang: 'fr',
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = manifestURL;
+  document.head.appendChild(link);
+
+  const appleIcon = document.createElement('link');
+  appleIcon.rel = 'apple-touch-icon';
+  appleIcon.href = makeIcon(180);
+  document.head.appendChild(appleIcon);
+
+  let swReg = null;
+  let hadController = !!navigator.serviceWorker.controller;
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+      swReg = reg;
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            $('updateBanner').hidden = false;
+          }
+        });
+      });
+    }).catch(() => {});
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) { hadController = true; return; }
+      if (refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
+  }
+
+  $('btnReload').addEventListener('click', () => location.reload());
+
+  let deferredPrompt = null;
+
+  function showInstallUI(show){
+    $('installBanner').hidden = !show;
+    $('btnInstallHeader').hidden = !show;
+    $('btnInstallBilan').hidden = !show;
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    try {
+      if (localStorage.getItem('pwa.install.dismissed') === '1') return;
+    } catch(_) {}
+    showInstallUI(true);
+  });
+
+  async function triggerInstall(){
+    if (!deferredPrompt) {
+      alert("Pour installer : menu Chrome ⋮ → « Ajouter à l'écran d'accueil ».");
+      return;
+    }
+    deferredPrompt.prompt();
+    const res = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    showInstallUI(false);
+    if (res.outcome === 'accepted') {
+      try { localStorage.removeItem('pwa.install.dismissed'); } catch(_){}
+    }
+  }
+
+  $('btnInstall').addEventListener('click', triggerInstall);
+  $('btnInstallHeader').addEventListener('click', triggerInstall);
+  $('btnInstallBilan').addEventListener('click', triggerInstall);
+
+  $('btnDismissInstall').addEventListener('click', () => {
+    showInstallUI(false);
+    try { localStorage.setItem('pwa.install.dismissed', '1'); } catch(_){}
+  });
+
+  window.addEventListener('appinstalled', () => {
+    showInstallUI(false);
+    try { localStorage.removeItem('pwa.install.dismissed'); } catch(_){}
+  });
+
+  function updateOnline(){
+    $('offlineBadge').hidden = navigator.onLine;
+  }
+  window.addEventListener('online', updateOnline);
+  window.addEventListener('offline', updateOnline);
+  updateOnline();
+
+  window.SUP = window.SUP || {};
+  window.SUP.install = triggerInstall;
+})();
+</script>
+
+<!-- ==================== 2) LOGIQUE MÉTIER ==================== -->
+<script>
+(function(){
+'use strict';
+
+const KEY = 'superette.v1';
+const DEFAULTS = { shopName:'Ma Supérette', capital:0, devise:'FCFA', ops:[] };
+
+let S = loadState();
+let storageOK = true;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const o = JSON.parse(raw) || {};
+      return {
+        shopName: String(o.shopName || DEFAULTS.shopName),
+        capital: Number(o.capital) || 0,
+        devise: String(o.devise || DEFAULTS.devise),
+        ops: Array.isArray(o.ops) ? o.ops.map(normalizeOp) : []
+      };
+    }
+  }catch(e){ storageOK = false; }
+  return { shopName:DEFAULTS.shopName, capital:0, devise:DEFAULTS.devise, ops:[] };
+}
+
+function normalizeOp(x){
+  x = x || {};
+  const t = ['recette','achat','depense'].indexOf(x.type) >= 0 ? x.type : 'depense';
+  return {
+    id: String(x.id || (Date.now() + Math.random().toString(36).slice(2,7))),
+    type: t,
+    montant: Math.abs(Number(x.montant) || 0),
+    libelle: String(x.libelle || ''),
+    date: String(x.date || todayStr()),
+    ts: Number(x.ts) || Date.now()
+  };
+}
+
+function save(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(S));
+    storageOK = true;
+  }catch(e){ storageOK = false; }
+  render();
+}
+
+const $ = id => document.getElementById(id);
+function pad(n){ return String(n).padStart(2,'0'); }
+function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayStr(){ return ymd(new Date()); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+function fmt(n){ return round2(n).toLocaleString('fr-FR',{maximumFractionDigits:2}) + ' ' + S.devise; }
+function fmtSigned(n){
+  const v = round2(n);
+  const sign = v > 0 ? '+' : (v < 0 ? '−' : '');
+  return
